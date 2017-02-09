@@ -7,58 +7,22 @@ require "colorize"
 require "credit_card_validations"
 require "credit_card_validations/string"
 require "byebug"
+require_relative "lib/request"
 
-@base_uri = URI("https://order.dominos.jp/eng/")
-@http = Net::HTTP.start(@base_uri.host, @base_uri.port, use_ssl: true)
-@jar = HTTP::CookieJar.new
 @total_price = 0
 @total_price_without_tax = 0
 @name = nil
 
-def perform(request)
-  request["Cookie"] = HTTP::Cookie.cookie_value(@jar.cookies(@base_uri))
-
-  response = @http.request(request)
-
-  response.get_fields('Set-Cookie').each do |value|
-    @jar.parse(value, @base_uri)
-  end
-
-  response
-end
-
-def get(url)
-  request = Net::HTTP::Get.new(URI(url))
-  perform(request)
-end
-
-def post(url, form_data)
-  request = Net::HTTP::Post.new(URI(url))
-  request.set_form_data(form_data)
-
-  perform(request)
-end
-
 def login(email, password)
-  response = post("https://order.dominos.jp/eng/login/login/",
-                  "emailAccount" => email,
-                  "webPwd" => password)
-
-  unless response.code.to_i == 302
-    puts "Couldn't log in successfully"
-    return
-  end
-
-  true
+  Request.post(
+    "https://order.dominos.jp/eng/login/login/", { "emailAccount" => email, "webPwd" => password },
+    expect: :redirect, failure: "Couldn't log in successfully"
+  )
 end
 
 def order_type
-  response = get("https://order.dominos.jp/eng/receipt/")
-
-  unless response.code.to_i == 200
-    puts "Couldn't get order types page"
-    return
-  end
+  response = Request.get("https://order.dominos.jp/eng/receipt/",
+                         expect: :ok, failure: "Couldn't get order types page")
 
   doc = Nokogiri::HTML(response.body)
   addresses = doc.css(".l-section.m-addressSelect .addressSelect_content").map do |address_content|
@@ -84,22 +48,14 @@ def order_type
   params["receiptMethod"] = "1" # 1=delivery, 3=pickup
   params["todokeSeq"] = address[:id] # Set the delivery address
 
-  response = post("https://order.dominos.jp/eng/receipt/setReceipt", params)
-
-  unless response.code.to_i == 302 &&
-         response["Location"] == "https://order.dominos.jp/eng/receipt/input/"
-    puts "Couldn't set the delivery address"
-    return
-  end
+  Request.post("https://order.dominos.jp/eng/receipt/setReceipt", params,
+               expect: :redirect, to: "https://order.dominos.jp/eng/receipt/input/",
+               failure: "Couldn't set the delivery address")
 end
 
 def input
-  response = get("https://order.dominos.jp/eng/receipt/input/")
-
-  unless response.code.to_i == 200
-    puts "Couldn't get information input page"
-    return
-  end
+  response = Request.get("https://order.dominos.jp/eng/receipt/input/",
+                         expect: :ok, failure: "Couldn't get information input page")
 
   doc = Nokogiri::HTML(response.body)
   name_input = doc.css("input[name=kokyakuNm]").first
@@ -125,11 +81,9 @@ def input
   params["kokyakuNm"] = @name
   params["telSeq"] = phone_number_value
 
-  response = post("https://order.dominos.jp/eng/receipt/confirm", params)
-
-  unless response.code.to_i == 200 && response.body.include?("Order Type, Day&Time and Your Store")
-    puts "Couldn't set your information"
-    return
+  response = Request.post("https://order.dominos.jp/eng/receipt/confirm", params,
+                          expect: :ok, failure: "Couldn't set your information") do |resp|
+    resp.body.include?("Order Type, Day&Time and Your Store")
   end
 
   doc = Nokogiri::HTML(response.body)
@@ -147,21 +101,14 @@ def input
     return
   end
 
-  response = post("https://order.dominos.jp/eng/receipt/complete", params)
-
-  unless response.code.to_i == 302 && response["Location"] == "https://order.dominos.jp/eng/menu/"
-    puts "Couldn't validate your information"
-    return
-  end
+  Request.post("https://order.dominos.jp/eng/receipt/complete", params
+               expect: :redirect, to: "https://order.dominos.jp/eng/menu/",
+               failure: "Couldn't validate your information")
 end
 
 def select_pizzas
-  response = get("https://order.dominos.jp/eng/pizza/search/")
-
-  unless response.code.to_i == 200
-    puts "Couldn't get pizza list page"
-    return
-  end
+  response = Request.get("https://order.dominos.jp/eng/pizza/search/",
+                         expect: :ok, failure: "Couldn't get pizza list page")
 
   doc = Nokogiri::HTML(response.body)
   pizza_options = doc.css(".jso-dataLayerProductClick").map do |anchor_element|
@@ -224,13 +171,7 @@ def select_pizzas
 end
 
 def customize_pizza(pizza)
-  response = get(pizza[:url])
-
-  unless response.code.to_i == 200
-    puts "Couldn't open pizza detail page"
-    return false
-  end
-
+  response = Request.get(pizza[:url], expect: :ok, failure: "Couldn't open pizza detail page")
   doc = Nokogiri::HTML(response.body)
 
   puts pizza[:name].colorize(:blue)
@@ -280,41 +221,29 @@ end
 
 def add_pizza(preferences)
   params = { "pageId" => "PIZZA_DETAIL" }.merge(preferences)
-  response = post("https://order.dominos.jp/eng/cart/add/pizza/", params)
-
-  unless response.code.to_i == 302 &&
-    response["Location"].match(%r{\Ahttps?://order\.dominos\.jp/eng/cart/added/\z})
-    # Sometimes redirects to a HTTP url even though the pizza was added
-    puts "Couldn't add the pizza you selected"
-    return false
-  end
+  response = Request.post(
+    "https://order.dominos.jp/eng/cart/add/pizza/", params,
+    expect: :redirect, to: %r{\Ahttps?://order\.dominos\.jp/eng/cart/added/\z},
+    failure: "Couldn't add the pizza you selected"
+  )
 
   # For some reason we need to GET this URL otherwise it doesn't count as added <_<
-  response = get(response["Location"])
-
-  unless response.code.to_i == 302 && response["Location"] == "https://order.dominos.jp/eng/cart/"
-    puts "Couldn't add the pizza you selected"
-    return false
-  end
-
-  true
+  Request.get(response["Location"],
+              expect: :redirect, to: "https://order.dominos.jp/eng/cart/",
+              failure: "Couldn't add the pizza you selected")
 end
 
-def show_order_details(source = nil)
-  unless source
-    response = get("https://order.dominos.jp/eng/pizza/search/")
-
-    unless response.code.to_i == 200
-      puts "Couldn't get pizza list page"
-      return
-    end
+def show_order_details(body = nil)
+  unless body
+    response = Request.get("https://order.dominos.jp/eng/pizza/search/",
+                           expect: :ok, failure: "Couldn't get pizza list page")
   end
 
   puts
   puts
   puts "Review Your Order".colorize(:red)
 
-  doc = Nokogiri::HTML(source || response.body)
+  doc = Nokogiri::HTML(body || response.body)
 
   # Order items
   doc.css(".m-side_orderItems li").each do |order_item|
@@ -361,11 +290,8 @@ def select_coupon
   value = Ask.confirm "Add a coupon?"
   return unless value
 
-  response = get("https://order.dominos.jp/eng/coupon/use/")
-  unless response.code.to_i == 200
-    puts "Couldn't get coupons list"
-    return
-  end
+  response = Request.get("https://order.dominos.jp/eng/coupon/use/",
+                         expect: :ok, failure: "Couldn't get coupons list")
 
   doc = Nokogiri::HTML(response.body)
   coupons = doc.css("li").map do |item|
@@ -420,20 +346,13 @@ def select_coupon
     return
   end
 
-  response = post("https://order.dominos.jp/eng/webapi/sides/setUserCoupon/", params)
-
-  unless response.code.to_i == 200
-    puts "Couldn't add coupon\n#{response.body}"
-    return
-  end
+  Request.post("https://order.dominos.jp/eng/webapi/sides/setUserCoupon/", params,
+               expect: :ok, failure: "Couldn't add coupon")
 end
 
 def payment
-  response = get("https://order.dominos.jp/eng/regi/")
-  unless response.code.to_i == 200
-    puts "Couldn't get payment page"
-    return
-  end
+  response = Request.get("https://order.dominos.jp/eng/regi/",
+                         expect: :ok, failure: "Couldn't get payment page")
 
   puts
   puts
@@ -503,12 +422,8 @@ def payment
     "isProvisionalKokyaku" => "false"
   }.merge(credit_card_params)
 
-  response = post("https://order.dominos.jp/eng/regi/confirm", order_params)
-
-  unless response.code.to_i == 200
-    puts "Couldn't submit payment information"
-    return
-  end
+  response = Request.post("https://order.dominos.jp/eng/regi/confirm", order_params,
+                          expect: :ok, failure: "Couldn't submit payment information")
 
   doc = Nokogiri::HTML(response.body)
   token_input = doc.css("input[name='org.apache.struts.taglib.html.TOKEN']").first
@@ -543,13 +458,9 @@ def payment
     return
   end
 
-  response = post("https://order.dominos.jp/eng/regi/insert", insert_params)
-
-  unless response.code.to_i == 302 &&
-         response["Location"].start_with?("https://order.dominos.jp/eng/regi/complete/?")
-    puts "Order couldn't be placed for some reason :("
-    return
-  end
+  Request.post("https://order.dominos.jp/eng/regi/insert", insert_params,
+               expect: :redirect, to: %r{\Ahttps://order\.dominos\.jp/eng/regi/complete/\?},
+               failure: "Order couldn't be placed for some reason :(")
 
   puts
   puts "Success!"
@@ -558,12 +469,8 @@ def payment
 end
 
 def validate_credit_card(params)
-  response = post("https://order.dominos.jp/eng/webapi/regi/validate/creditCard/", params)
-
-  unless response.code.to_i == 200
-    puts "Couldn't validate credit card info"
-    return
-  end
+  response = Request.post("https://order.dominos.jp/eng/webapi/regi/validate/creditCard/", params,
+                          expect: :ok, failure: "Couldn't validate credit card info")
 
   result = JSON.parse(response.body)
   if result["errorDetails"]
