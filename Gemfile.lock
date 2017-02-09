@@ -1,0 +1,50 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activemodel (5.0.1)
+      activesupport (= 5.0.1)
+    activesupport (5.0.1)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (~> 0.7)
+      minitest (~> 5.1)
+      tzinfo (~> 1.1)
+    colorize (0.8.1)
+    concurrent-ruby (1.0.4)
+    credit_card_validations (3.3.0)
+      activemodel (>= 3)
+      activesupport (>= 3)
+    domain_name (0.5.20161129)
+      unf (>= 0.0.5, < 1.0.0)
+    highline (1.7.8)
+    http-cookie (1.0.3)
+      domain_name (~> 0.5)
+    i18n (0.7.0)
+    inquirer (0.2.1)
+      term-ansicolor (>= 1.2.2)
+    mini_portile2 (2.1.0)
+    minitest (5.10.1)
+    nokogiri (1.7.0.1)
+      mini_portile2 (~> 2.1.0)
+    term-ansicolor (1.4.0)
+      tins (~> 1.0)
+    thread_safe (0.3.5)
+    tins (1.13.0)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  colorize
+  credit_card_validations
+  highline
+  http-cookie
+  inquirer
+  nokogiri
+
+BUNDLED WITH
+   1.13.6
