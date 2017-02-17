@@ -1,6 +1,7 @@
-# DominosJP
+# DominosJP 🍕🛵🇯🇵
 🍕Domino's Pizza Japan CLI 🍕
 
+![](https://i.imgur.com/CRaTrSE.jpg)
 
 ### Requirements
 
@@ -22,7 +23,14 @@ and follow the instructions
 ### Features
 
 - Order a pizza in less than a minute
+- Save your preferences for even faster ordering
 - Finds the best coupon for your order from your coupon box, by calculating the real value
+
+### Preferences
+
+Not really pizza-related, but by providing default values in a `.dominosjp.yml` file in your home directory you can skip most steps. See [.dominosjp.yml](blob/master/.dominosjp.yml) for examples.
+
+Note: All keys are optional. It even allows for partial credit card info.
 
 ### Limitations/TODO
 
