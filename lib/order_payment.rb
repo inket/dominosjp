@@ -15,10 +15,11 @@ class OrderPayment
     puts
     puts "#{"Payment information".colorize(:blue)} (you will be able to review your order later)"
 
-    @credit_card = CreditCard.new
+    @credit_card = Preferences.instance.credit_card || CreditCard.new
     @credit_card.input(default_name)
 
-    self.note = Ask.input "Any special requests? (not food preparation requests)"
+    self.note = Preferences.instance.note ||
+                Ask.input("Any special requests? (not food preparation requests)")
   end
 
   def validate
@@ -109,6 +110,10 @@ class OrderLastReview
 end
 
 class CreditCard
+  attr_accessor :number, :cvv
+  attr_accessor :expiration_date
+  attr_accessor :name_on_card
+
   VALUES = {
     visa: "00200",
     mastercard: "00300",
@@ -118,49 +123,52 @@ class CreditCard
     nicos: "00600"
   }
 
+  def initialize(config = {})
+    self.number = config[:number] || ""
+    self.cvv = config[:cvv]
+    self.expiration_date = config[:expiration_date]
+    self.name_on_card = config[:name]
+  end
+
   def input(default_name = nil)
     loop do
-      credit_card_number = ""
-      while !credit_card_number.valid_credit_card_brand?(:visa, :mastercard, :jcb, :amex, :diners)
-        puts "Invalid card number" unless credit_card_number == ""
-        credit_card_number = Ask.input "Credit Card Number"
+      while !number.valid_credit_card_brand?(:visa, :mastercard, :jcb, :amex, :diners)
+        puts "Invalid card number" unless number == ""
+        self.number = Ask.input "Credit Card Number"
       end
 
-      unless credit_card_number.credit_card_brand == :diners
-        cvv = Ask.input "CVV"
+      unless number.credit_card_brand == :diners
+        self.cvv ||= HighLine.new.ask("CVV: ") { |q| q.echo = "*" }
       end
 
-      expiration_month, expiration_year = ""
-      loop do
-        expiration_date = Ask.input "Expiration Date (mm/yy)"
+      expiration_month, expiration_year = (expiration_date || "").split("/")
+      while !(1..12).include?(expiration_month.to_i) || !(17..31).include?(expiration_year.to_i)
+        self.expiration_date = Ask.input "Expiration Date (mm/yy)"
         expiration_month, expiration_year = expiration_date.split("/")
-        break if (1..12).include?(expiration_month.to_i) && (17..31).include?(expiration_year.to_i)
       end
 
-      name = Ask.input "Name on Card", default: default_name
-
-      @params = {
-        "existCreditCardF" => "",
-        "reuseCredit_check" => "1", # Seems to be 1 but it doesn't save the CC info
-        "cardComCd" => VALUES[credit_card_number.credit_card_brand],
-        "creditCardNo" => credit_card_number,
-        "creditCardSecurityCode" => cvv,
-        "creditCardSignature" => name,
-        "goodThruMonth" => expiration_month.rjust(2, "0"),
-        "goodThruYear" => expiration_year
-      }
+      self.name_on_card ||= Ask.input "Name on Card", default: default_name
 
       break if valid?
     end
   end
 
   def params
-    @params
+    {
+      "existCreditCardF" => "",
+      "reuseCredit_check" => "1", # Seems to be 1 but it doesn't save the CC info
+      "cardComCd" => VALUES[number.credit_card_brand],
+      "creditCardNo" => number,
+      "creditCardSecurityCode" => cvv,
+      "creditCardSignature" => name_on_card,
+      "goodThruMonth" => expiration_date.split("/").first.rjust(2, "0"),
+      "goodThruYear" => expiration_date.split("/").last
+    }
   end
 
   def valid?
     response = Request.post(
-      "https://order.dominos.jp/eng/webapi/regi/validate/creditCard/", @params,
+      "https://order.dominos.jp/eng/webapi/regi/validate/creditCard/", params,
       expect: :ok, failure: "Couldn't validate credit card info"
     )
 

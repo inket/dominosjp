@@ -8,9 +8,13 @@ class OrderInformation
     saved_name = Name.from(response.body)
     phone_numbers = PhoneNumbers.from(response.body)
 
-    self.name = Ask.input "Name", default: saved_name
-    phone_number_index = Ask.list "Phone Number", phone_numbers.selection_list
-    self.phone_number = phone_numbers[phone_number_index]
+    self.name = Ask.input "Name", default: Preferences.instance.name || saved_name
+
+    self.phone_number = phone_numbers.find_number(Preferences.instance.phone_number)
+    unless phone_number
+      phone_number_index = Ask.list "Phone Number", phone_numbers.selection_list
+      self.phone_number = phone_numbers[phone_number_index]
+    end
 
     @first_response = response
   end
@@ -87,6 +91,10 @@ class PhoneNumbers < Array
     end
 
     PhoneNumbers.new(numbers)
+  end
+
+  def find_number(number)
+    detect { |phone_number| phone_number.number == number }
   end
 
   def selection_list

@@ -4,6 +4,7 @@ require "inquirer"
 require "nokogiri"
 
 require_relative "request"
+require_relative "preferences"
 require_relative "order_address"
 require_relative "order_coupon"
 require_relative "order_information"
@@ -17,9 +18,9 @@ class DominosJP
   attr_accessor :order_review
   attr_accessor :order_coupon, :order_payment
 
-  def initialize(email:, password:)
-    @email = email
-    @password = password
+  def initialize(login_details = {})
+    @email = login_details[:email] || Preferences.instance.email
+    @password = login_details[:password]
 
     self.order_address = OrderAddress.new
     self.order_information = OrderInformation.new
@@ -29,6 +30,9 @@ class DominosJP
   end
 
   def login
+    @email ||= Ask.input("Email")
+    @password ||= HighLine.new.ask("Password: ") { |q| q.echo = "*" }
+
     Request.post(
       "https://order.dominos.jp/eng/login/login/",
       { "emailAccount" => @email, "webPwd" => @password },
