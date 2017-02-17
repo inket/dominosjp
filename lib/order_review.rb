@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class OrderReview
   attr_accessor :page
   attr_accessor :total_price, :total_price_without_tax
@@ -25,7 +26,7 @@ class OrderReview
     total_price_title = total_price_element.css("dt").text.strip.gsub(/\s+/, " ")
     total_price_string = total_price_element.css("dd").text.strip.gsub(/\s+/, " ")
 
-    self.total_price = total_price_string.gsub(",", "").scan(/¥(\d+)/).flatten.first.to_i
+    self.total_price = total_price_string.delete(",").scan(/¥(\d+)/).flatten.first.to_i
     self.total_price_without_tax = total_price / 108 * 100 # 8% tax
 
     "\n#{total_price_title}: #{total_price_string.colorize(:red)}\n"\
@@ -80,7 +81,7 @@ class CouponItems < Array
   end
 
   def to_s
-    return unless count > 0
+    return unless count.positive?
     "\nCoupons".colorize(:green)
   end
 end

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class OrderCoupon
   attr_accessor :total_price_without_tax
   attr_accessor :add_coupon
@@ -35,7 +36,7 @@ class Coupons < Array
 
     # Sort coupons by real value, expiration date while deranking those that cannot be used (error)
     coupons = [coupons.reject(&:error), coupons.select(&:error)].map do |coups|
-      coups.group_by(&:real_value).sort.reverse.map do |real_value, same_value_coupons|
+      coups.group_by(&:real_value).sort.reverse.map do |_real_value, same_value_coupons|
         same_value_coupons.sort_by(&:expiry)
       end
     end.flatten

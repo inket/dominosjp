@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class OrderInformation
   attr_accessor :name, :phone_number
 
@@ -37,7 +38,7 @@ class OrderInformation
   def display
     doc = Nokogiri::HTML(@second_response.body)
     info = doc.css(".m-input__heading").map(&:text).
-               zip(doc.css(".section_content_table_td").map(&:text)).to_h
+           zip(doc.css(".section_content_table_td").map(&:text)).to_h
     @page_params = doc.css("input[type=hidden]").map do |input|
       [input["name"], input["value"]]
     end.to_h
@@ -46,7 +47,7 @@ class OrderInformation
   end
 
   def confirm
-    raise "Stopped by user" unless (Ask.confirm "Continue?")
+    raise "Stopped by user" unless Ask.confirm "Continue?"
 
     Request.post("https://order.dominos.jp/eng/receipt/complete", @page_params,
                  expect: :redirect, to: "https://order.dominos.jp/eng/menu/",
@@ -86,7 +87,7 @@ class PhoneNumbers < Array
     doc = Nokogiri::HTML(source)
     numbers = doc.css("select[name=telSeq] > option").map { |option| PhoneNumber.new(option) }
 
-    unless numbers.size > 0
+    if numbers.empty?
       raise "Couldn't find any saved phone numbers in the information input page"
     end
 

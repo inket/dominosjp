@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "credit_card_validations"
 require "credit_card_validations/string"
 
@@ -90,14 +91,14 @@ class OrderLastReview
 
   def to_s
     sections = doc.css(".l-section").map do |section|
-      next unless section.css(".m-heading__caption").count > 0
+      next unless section.css(".m-heading__caption").count.positive?
 
       section_name = section.css(".m-heading__caption").text.strip.gsub(/\s+/, " ").colorize(:green)
       rows = section.css("tr").map do |row|
         th = row.css(".m-input__heading").first || row.css("th").first
         th_text = th.text.strip.gsub(/\s+/, " ").colorize(:blue)
         td_text = row.css(".section_content_table_td").text.
-                      gsub(/ +/, " ").gsub(/\t+/, "").gsub(/(?:\r\n)+/, "\r\n").strip
+                  gsub(/ +/, " ").gsub(/\t+/, "").gsub(/(?:\r\n)+/, "\r\n").strip
 
         "#{th_text}\n#{td_text}"
       end
@@ -121,7 +122,7 @@ class CreditCard
     amex: "00400",
     diners: "00100",
     nicos: "00600"
-  }
+  }.freeze
 
   def initialize(config = {})
     self.number = config[:number] || ""
@@ -132,7 +133,7 @@ class CreditCard
 
   def input(default_name = nil)
     loop do
-      while !number.valid_credit_card_brand?(:visa, :mastercard, :jcb, :amex, :diners)
+      until number.valid_credit_card_brand?(:visa, :mastercard, :jcb, :amex, :diners)
         puts "Invalid card number" unless number == ""
         self.number = Ask.input "Credit Card Number"
       end
@@ -142,7 +143,7 @@ class CreditCard
       end
 
       expiration_month, expiration_year = (expiration_date || "").split("/")
-      while !(1..12).include?(expiration_month.to_i) || !(17..31).include?(expiration_year.to_i)
+      while !(1..12).cover?(expiration_month.to_i) || !(17..31).cover?(expiration_year.to_i)
         self.expiration_date = Ask.input "Expiration Date (mm/yy)"
         expiration_month, expiration_year = expiration_date.split("/")
       end

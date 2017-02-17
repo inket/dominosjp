@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Pizzas < Array
   def self.from(source)
     doc = Nokogiri::HTML(source)
@@ -71,7 +72,7 @@ class Pizza
 
     "#{name.colorize(:blue)} "\
     "#{allergen.strip.colorize(:yellow)}\n  "\
-    "#{description.gsub(',', ', ').gsub(')', ') ')}\n"
+    "#{description.gsub(",", ", ").gsub(")", ") ")}\n"
   end
 
   private
@@ -83,28 +84,30 @@ class Pizza
   end
 end
 
-class Pizza::Size
-  attr_accessor :text, :value
+class Pizza
+  class Size
+    attr_accessor :text, :value
 
-  def initialize(option)
-    self.text = option.text.strip
-    self.value = option.css("input[name=sizeC]").first["value"]
+    def initialize(option)
+      self.text = option.text.strip
+      self.value = option.css("input[name=sizeC]").first["value"]
+    end
+
+    def list_item
+      text.gsub(/\s+/, " ").sub("人 /", "人/").sub("cm ", "cm\n  ").sub(" ¥", "\n  ¥").strip
+    end
   end
 
-  def list_item
-    text.gsub(/\s+/, " ").sub("人 /", "人/").sub("cm ", "cm\n  ").sub(" ¥", "\n  ¥").strip
-  end
-end
+  class Crust
+    attr_accessor :text, :value
 
-class Pizza::Crust
-  attr_accessor :text, :value
+    def initialize(option)
+      self.text = option.css(".caption_radio").first.text.strip
+      self.value = option.css("input[name=crustC]").first["value"]
+    end
 
-  def initialize(option)
-    self.text = option.css(".caption_radio").first.text.strip
-    self.value = option.css("input[name=crustC]").first["value"]
-  end
-
-  def list_item
-    text.gsub(/\s+/, " ").strip
+    def list_item
+      text.gsub(/\s+/, " ").strip
+    end
   end
 end

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "net/http"
 require "http-cookie"
 require "singleton"
@@ -10,7 +11,7 @@ class Request
 
     Request.instance.perform(
       request,
-      block_given? ? options.merge(proc: Proc.new { |res| yield(res) }) : options
+      block_given? ? options.merge(proc: proc { |res| yield(res) }) : options
     )
   end
 
@@ -20,7 +21,7 @@ class Request
 
     Request.instance.perform(
       request,
-      block_given? ? options.merge(proc: Proc.new { |res| yield(res) }) : options
+      block_given? ? options.merge(proc: proc { |res| yield(res) }) : options
     )
   end
 
@@ -47,7 +48,7 @@ class Request
   end
 
   def save_cookies(response)
-    response.get_fields('Set-Cookie').each do |value|
+    response.get_fields("Set-Cookie").each do |value|
       @jar.parse(value, @base_uri)
     end
   end
@@ -62,7 +63,7 @@ class Request
     expectation = { ok: 200, redirect: 302 }[expectation] if expectation.is_a?(Symbol)
 
     correct_status = (response.code.to_i == expectation)
-    correct_location = redirect == nil ||
+    correct_location = redirect.nil? ||
                        (redirect == response["Location"]) ||
                        (redirect.is_a?(Regexp) && redirect.match(response["Location"]))
 
@@ -70,7 +71,7 @@ class Request
       failure_message =
         failure ||
         "Expected a different server response. "\
-        "(expected: #{options} / actual: #{response.code}[#{response['Location']}])"
+        "(expected: #{options} / actual: #{response.code}[#{response["Location"]}])"
 
       puts failure_message.colorize(:red)
       raise failure_message

@@ -1,7 +1,8 @@
-require 'bundler'
+# frozen_string_literal: true
+require "bundler"
 Bundler.setup
 
-gemspec_filename = 'dominosjp.gemspec'
+gemspec_filename = "dominosjp.gemspec"
 gemspec = eval(File.read(gemspec_filename))
 gem_filename = "#{gemspec.full_name}.gem"
 

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "yaml"
 
 class Preferences
@@ -9,7 +10,7 @@ class Preferences
     preferences_path = File.join(Dir.home, ".dominosjp.yml")
     return unless File.exist?(preferences_path)
 
-    prefs = YAML.load(File.read(preferences_path))
+    prefs = YAML.safe_load(File.read(preferences_path))
 
     self.email = prefs[:email] if prefs[:email]
     self.name = prefs[:name] if prefs[:name]

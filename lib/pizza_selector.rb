@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class PizzaSelector
   def self.select_pizzas
     response = Request.get("https://order.dominos.jp/eng/pizza/search/",
@@ -23,7 +24,7 @@ class PizzaSelector
         menu.default = "Cancel"
       end
 
-      break unless (Ask.confirm "Add another pizza?")
+      break unless Ask.confirm "Add another pizza?"
     end
   end
 
@@ -50,7 +51,7 @@ class PizzaSelector
       # TODO: Allow cut type, number of slices and quantity selection
       "cutTypeC" => 1, # Type of cut: 1=Round Cut
       "cutSu" => 8, # Number of slices
-      "figure" => 1  # Quantity
+      "figure" => 1 # Quantity
     )
 
     response = Request.post(
