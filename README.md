@@ -1,7 +1,7 @@
 # DominosJP 🍕🛵🇯🇵
 🍕Domino's Pizza Japan CLI 🍕
 
-![](https://i.imgur.com/CRaTrSE.jpg)
+<img src="https://i.imgur.com/CRaTrSE.jpg" width="500">
 
 ### Requirements
 
