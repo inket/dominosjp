@@ -125,10 +125,12 @@ class CreditCard
   }.freeze
 
   def initialize(config = {})
-    self.number = config[:number] || ""
-    self.cvv = config[:cvv]
-    self.expiration_date = config[:expiration_date]
-    self.name_on_card = config[:name]
+    info = config.map { |key, value| [(key.to_sym rescue key), value.to_s] }.to_h
+
+    self.number = info[:number] || ""
+    self.cvv = info[:cvv]
+    self.expiration_date = info[:expiration_date]
+    self.name_on_card = info[:name]
   end
 
   def input(default_name = nil)

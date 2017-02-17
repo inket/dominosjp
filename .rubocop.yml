@@ -230,3 +230,6 @@ Lint/LiteralInCondition:
 Lint/LiteralInInterpolation:
   Description: Checks for literals used in interpolation.
   Enabled: false
+Style/RescueModifier:
+  Description: Checks for uses of rescue in its modifier form.
+  Enabled: false

@@ -9,7 +9,7 @@ class OrderInformation
     saved_name = Name.from(response.body)
     phone_numbers = PhoneNumbers.from(response.body)
 
-    self.name = Ask.input "Name", default: Preferences.instance.name || saved_name
+    self.name = Preferences.instance.name || Ask.input("Name", default: saved_name)
 
     self.phone_number = phone_numbers.find_number(Preferences.instance.phone_number)
     unless phone_number

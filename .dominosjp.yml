@@ -2,8 +2,8 @@ email: example@example.org
 name: Test User
 phone_number: 09011112222
 credit_card:
-  - number: 4444555566667777
-  - cvv: 111
-  - expiration_date: 01/22
-  - name: Test User
+  number: 4444555566667777
+  cvv: 111
+  expiration_date: 01/22
+  name: Test User
 note: Some note
