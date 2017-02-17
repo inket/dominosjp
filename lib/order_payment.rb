@@ -56,8 +56,8 @@ class OrderPayment
 
     puts
     puts "Success!"
-    puts "Be sure to check the Domino's website in your browser "\
-         "to track your order status, and win a coupon"
+    puts "Be sure to check the Domino's Pizza website in your browser "\
+         "to track your order status via the Pizza Tracker, and win a Mystery Deal coupon"
   end
 
   private
