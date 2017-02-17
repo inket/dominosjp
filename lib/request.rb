@@ -72,18 +72,18 @@ class Request
         "Expected a different server response. "\
         "(expected: #{options} / actual: #{response.code}[#{response['Location']}])"
 
-      puts failure_message
+      puts failure_message.colorize(:red)
       raise failure_message
     end
   end
 
-  def validate_block(block, response)
+  def validate_block(options, response)
     expectation, failure = options.values_at(:proc, :failure)
 
     unless expectation.call(response)
       failure_message = failure || "Expected a different server response. "
 
-      puts failure_message
+      puts failure_message.colorize(:red)
       raise failure_message
     end
   end

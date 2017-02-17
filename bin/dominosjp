@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/dominosjp'
+
+dominos = DominosJP.new(email: "<email>", password: "<password>")
+dominos.login
+dominos.order
