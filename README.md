@@ -39,7 +39,7 @@ Note: All keys are optional. It even allows for partial credit card info.
 - (1) Allow for paying via cash (credit card-only now)
 - (5) Allow for selecting pizza toppings
 - (4) Allow for selecting pizza size/cut type/number of slices
-- (2) Allow for selecting sides (not only pizzas), (5) maybe even the special menu
+- (4) Allow for selecting items from the special menu
 - (5) Extra: Pizza Tracking via the CLI, and hopefully automate the Mystery Deal
 
 ### Contact

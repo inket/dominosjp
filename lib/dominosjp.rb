@@ -13,6 +13,8 @@ require_relative "order_payment"
 require_relative "order_review"
 require_relative "pizza"
 require_relative "pizza_selector"
+require_relative "side"
+require_relative "side_selector"
 
 class DominosJP
   attr_accessor :order_address, :order_information
@@ -51,7 +53,7 @@ class DominosJP
     order_information.confirm
 
     PizzaSelector.select_pizzas
-    # TODO: allow selecting sides
+    SideSelector.select_sides
 
     order_review.display
 

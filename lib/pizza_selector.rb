@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 class PizzaSelector
   def self.select_pizzas
+    return unless Ask.confirm "Add a pizza?"
+
     response = Request.get("https://order.dominos.jp/eng/pizza/search/",
                            expect: :ok, failure: "Couldn't get pizza list page")
 
@@ -45,8 +47,7 @@ class PizzaSelector
   end
 
   def self.add_pizza(pizza)
-    params = pizza.params
-    params = params.merge(
+    params = pizza.params.merge(
       "pageId" => "PIZZA_DETAIL",
       # TODO: Allow cut type, number of slices and quantity selection
       "cutTypeC" => 1, # Type of cut: 1=Round Cut
