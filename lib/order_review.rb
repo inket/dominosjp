@@ -81,7 +81,7 @@ class CouponItems < Array
   end
 
   def to_s
-    return unless count.positive?
+    return unless count > 0
     "\nCoupons".colorize(:green)
   end
 end

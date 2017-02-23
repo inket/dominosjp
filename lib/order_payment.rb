@@ -91,7 +91,7 @@ class OrderLastReview
 
   def to_s
     sections = doc.css(".l-section").map do |section|
-      next unless section.css(".m-heading__caption").count.positive?
+      next unless section.css(".m-heading__caption").count > 0
 
       section_name = section.css(".m-heading__caption").text.strip.gsub(/\s+/, " ").colorize(:green)
       rows = section.css("tr").map do |row|

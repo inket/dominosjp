@@ -3,7 +3,7 @@ AllCops:
     - "Rakefile"
   UseCache: false
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.3
+  TargetRubyVersion: 2.0
 Rails:
   Enabled: false
 Style/AsciiComments:
