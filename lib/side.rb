@@ -53,7 +53,9 @@ class Side
     @available_combos ||=
       detail_page_content.css(".m-section_item__changeSide .m-input__radio").map do |option|
         Side::Combo.new(option)
-      end.sort_by { |cmb| cmb.default ? 0 : 1 }
+      end
+
+    @available_combos.sort_by! { |cmb| cmb.default ? 0 : 1 }
   end
 
   def params
